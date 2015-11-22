@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Italocadamuro.GitHub.io by italocadamuro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Italocadamuro.GitHub.io</h1>
+      <h2 class="project-tagline">italocadamuro.github.io</h2>
+    </section>
+
+    <section class="main-content">
+      <h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
+
+<p>This is my submission for the "machine Learning" Course from Coursera.</p>
+
+<ul>
+<li>The following chapters have been prepared:</li>
+<li>Objective</li>
+<li>Step1 </li>
+<li>Step2 </li>
+<li>Conclusions</li>
+</ul>
+
+<h2>
+<a id="objective" class="anchor" href="#objective" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objective:</h2>
+
+<p>To fit a model from a training sequence and to apply to model to predict the classification of test sequence. 
+The aim is to minimize the classification error.<br>
+In order to have an estimation of the classification error on the test sequence, I have predict the result the model on the training sequence and evaluated the mis-classification. </p>
+
+<h2>
+<a id="step1-" class="anchor" href="#step1-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step1 :</h2>
+
+<p>The datasets have been downloaded and a preliminary data analysis performed.
+The data has already been split in two parts, the training sequence is composed of 19622 observations with 160 different predictors.
+The test sequence is just 20 observations with 160 different predictors.
+With the command str I observed that some of 160 predictors showed a very large number of NA. Moreover, a number of predictors showed very little variations. 
+Therefore, I decided to ignore the predictors with large number of NA and little variance for the first step. 
+This decision has been be revisited after a number of predictions have been performed.
+In a further step, I plotted the distribution of some of the predictors and found that they do not have a Gaussian distribution. 
+Finally, I tried to apply the "CoxBox" pre-processing transformation to the non Gaussian predictors but the result was also not Gaussian.</p>
+
+<p>As some of the predictors are not close to a Gaussian distribution the methods that require a Gaussian distribution of the predictors are not going to give a good result. </p>
+
+<h2>
+<a id="step2-" class="anchor" href="#step2-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step2 :</h2>
+
+<p>In this step I have fit some models using different methods on a subset of the original training data. 
+For this step, I have not performed and pre-processor.
+Results from predicting results using different methods. 
+Using the method "lda" without pre-processing, the misclassification for the training sequence was about 5792/19622 = 29%
+Using the method "rpart" without pre-processing, the misclassification for the training sequence was about 9898/19622 = 49% ()
+Finally, 
+Using the method "rf" without pre-processing, the misclassification for the training sequence was about 5/19622 = .025% ()</p>
+
+<h2>
+<a id="conclusions" class="anchor" href="#conclusions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusions:</h2>
+
+<p>The methid "Random Forest" offers the better results and it is relatively quick in returning the results. Moreover, I have experienced that the results is not directly dependent from the ntree parameter, as I have seen the same results for ntree=10 and ntree=50.
+Finally the method is not affected by the predictors having a Gaussian distribution or not. </p>
+
+<p>With "Random Forest" the predictions for the test sequence submitted to the Coursera reached 100%. </p>
+
+<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">caret</span>)
+library(<span class="pl-smi">rpart</span>)
+<span class="pl-c">## read csv:</span>
+<span class="pl-smi">test</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-v">file</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>pml-testing.csv<span class="pl-pds">"</span></span>, <span class="pl-v">header</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>, <span class="pl-v">sep</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>,<span class="pl-pds">"</span></span>)
+<span class="pl-smi">training</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-v">file</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>pml-training.csv<span class="pl-pds">"</span></span>, <span class="pl-v">header</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>, <span class="pl-v">sep</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>,<span class="pl-pds">"</span></span>)
+
+<span class="pl-c">#</span>
+<span class="pl-c"># set.seed</span>
+<span class="pl-c">#</span>
+set.seed(<span class="pl-c1">1812</span>)
+
+<span class="pl-c"># data inspection:</span>
+<span class="pl-c"># summary(training)</span>
+<span class="pl-c"># str(training)</span></pre></div>
+
+<div class="highlight highlight-source-r"><pre>
+<span class="pl-c"># remove measurements that are not relevant (for different reasons):</span>
+<span class="pl-smi">irrilevant</span><span class="pl-k">&lt;-</span>c(<span class="pl-s"><span class="pl-pds">"</span>amplitude_yaw_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>skewness_yaw_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>kurtosis_yaw_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_yaw_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>skewness_yaw_dumbbell<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>kurtosis_yaw_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_yaw_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>skewness_yaw_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>kurtosis_yaw_belt<span class="pl-pds">"</span></span>)
+
+<span class="pl-c"># time</span>
+<span class="pl-smi">irrilevant1</span><span class="pl-k">&lt;-</span>c(<span class="pl-s"><span class="pl-pds">"</span>raw_timestamp_part_1<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>raw_timestamp_part_2<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>cvtd_timestamp<span class="pl-pds">"</span></span>)
+
+<span class="pl-c"># not enough variation</span>
+<span class="pl-smi">irrilevant2</span><span class="pl-k">&lt;-</span> 
+c(
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_roll_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_picth_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>skewness_roll_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>min_yaw_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_roll_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>kurtosis_picth_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>kurtosis_yaw_arm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>skewness_roll_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>skewness_pitch_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>skewness_yaw_arm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_roll_dumbbell<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>kurtosis_picth_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_yaw_dumbbell<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>skewness_roll_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>skewness_pitch_dumbbell<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>min_yaw_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>kurtosis_roll_forearm<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>skewness_pitch_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>max_yaw_forearm<span class="pl-pds">"</span></span>)
+
+<span class="pl-c"># (na=19216)</span>
+<span class="pl-smi">irrilevant3</span><span class="pl-k">&lt;-</span>c(
+<span class="pl-s"><span class="pl-pds">"</span>max_picth_belt<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>min_roll_belt<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>min_pitch_belt<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>amplitude_roll_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>amplitude_pitch_belt<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>var_total_accel_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_roll_belt<span class="pl-pds">"</span></span>,   
+<span class="pl-s"><span class="pl-pds">"</span>stddev_roll_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_roll_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_pitch_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_pitch_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_pitch_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_yaw_belt<span class="pl-pds">"</span></span>,  
+<span class="pl-s"><span class="pl-pds">"</span>stddev_yaw_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_yaw_belt<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>var_accel_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_roll_arm<span class="pl-pds">"</span></span>,     <span class="pl-s"><span class="pl-pds">"</span>stddev_roll_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_roll_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_pitch_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_pitch_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>var_pitch_arm<span class="pl-pds">"</span></span>,  
+<span class="pl-s"><span class="pl-pds">"</span>avg_yaw_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_yaw_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_yaw_arm<span class="pl-pds">"</span></span>,   
+<span class="pl-s"><span class="pl-pds">"</span>max_roll_arm<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>max_picth_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>max_yaw_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_roll_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_pitch_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_yaw_arm<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>amplitude_roll_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_pitch_arm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_yaw_arm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>max_roll_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>max_picth_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>max_yaw_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_roll_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_pitch_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>amplitude_roll_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_pitch_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>var_accel_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_roll_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_roll_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_roll_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_pitch_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>stddev_pitch_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_pitch_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_yaw_dumbbell<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>stddev_yaw_dumbbell<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>var_yaw_dumbbell<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>max_roll_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>max_picth_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>amplitude_roll_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>amplitude_pitch_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>var_accel_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_roll_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_roll_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>var_roll_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_pitch_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_pitch_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>var_pitch_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>avg_yaw_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>stddev_yaw_forearm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>var_yaw_forearm<span class="pl-pds">"</span></span>)
+
+
+<span class="pl-smi">moreIrr</span><span class="pl-k">&lt;-</span> c(<span class="pl-s"><span class="pl-pds">"</span>min_roll_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_pitch_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>min_yaw_forearm<span class="pl-pds">"</span></span>, 
+            <span class="pl-s"><span class="pl-pds">"</span>kurtosis_picth_forearm<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>skewness_roll_forearm<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>skewness_roll_belt.1<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>max_roll_belt<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>max_yaw_belt<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>X<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>user_name<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>new_window<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>num_window<span class="pl-pds">"</span></span>   )
+
+
+<span class="pl-c"># very little variation </span>
+<span class="pl-smi">littleVar</span><span class="pl-k">&lt;-</span> c(
+<span class="pl-s"><span class="pl-pds">"</span>total_accel_belt<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>gyros_belt_x<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>gyros_belt_y<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>gyros_belt_z<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>accel_belt_x<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>accel_belt_y<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>accel_belt_z<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>magnet_belt_x<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>magnet_belt_y<span class="pl-pds">"</span></span>,  
+<span class="pl-s"><span class="pl-pds">"</span>magnet_belt_z<span class="pl-pds">"</span></span>,  
+<span class="pl-s"><span class="pl-pds">"</span>total_accel_arm<span class="pl-pds">"</span></span>,
+<span class="pl-s"><span class="pl-pds">"</span>gyros_arm_x<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>gyros_arm_y<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>gyros_arm_z<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_arm_x<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_arm_y<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_arm_z<span class="pl-pds">"</span></span>,          
+<span class="pl-s"><span class="pl-pds">"</span>magnet_arm_x<span class="pl-pds">"</span></span>,         
+<span class="pl-s"><span class="pl-pds">"</span>magnet_arm_y<span class="pl-pds">"</span></span>,         
+<span class="pl-s"><span class="pl-pds">"</span>magnet_arm_z<span class="pl-pds">"</span></span>,         
+<span class="pl-s"><span class="pl-pds">"</span>roll_dumbbell<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>total_accel_dumbbell<span class="pl-pds">"</span></span>, 
+<span class="pl-s"><span class="pl-pds">"</span>gyros_dumbbell_x<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>gyros_dumbbell_y<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>gyros_dumbbell_z<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>accel_dumbbell_x<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>accel_dumbbell_y<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>accel_dumbbell_z<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>magnet_dumbbell_x<span class="pl-pds">"</span></span>,    
+<span class="pl-s"><span class="pl-pds">"</span>magnet_dumbbell_y<span class="pl-pds">"</span></span>,    
+<span class="pl-s"><span class="pl-pds">"</span>magnet_dumbbell_z<span class="pl-pds">"</span></span>,    
+<span class="pl-s"><span class="pl-pds">"</span>total_accel_forearm<span class="pl-pds">"</span></span>,  
+<span class="pl-s"><span class="pl-pds">"</span>gyros_forearm_x<span class="pl-pds">"</span></span>,    
+<span class="pl-s"><span class="pl-pds">"</span>gyros_forearm_y<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>gyros_forearm_z<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_forearm_x<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_forearm_y<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>accel_forearm_z<span class="pl-pds">"</span></span>,      
+<span class="pl-s"><span class="pl-pds">"</span>magnet_forearm_x<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>magnet_forearm_y<span class="pl-pds">"</span></span>,     
+<span class="pl-s"><span class="pl-pds">"</span>magnet_forearm_z<span class="pl-pds">"</span></span> 
+)
+
+<span class="pl-c">#allIrr &lt;- c( irrilevant,irrilevant1,irrilevant2,irrilevant3, moreIrr, littleVa)</span>
+<span class="pl-smi">allIrr</span> <span class="pl-k">&lt;-</span> c( <span class="pl-smi">irrilevant</span>,<span class="pl-smi">irrilevant1</span>,<span class="pl-smi">irrilevant3</span>, <span class="pl-smi">moreIrr</span>, <span class="pl-smi">littleVar</span>)
+
+</pre></div>
+
+<div class="highlight highlight-source-r"><pre>
+<span class="pl-smi">allIrr</span>
+
+
+<span class="pl-c"># show this:</span>
+<span class="pl-smi">training.short</span> <span class="pl-k">&lt;-</span> subset(<span class="pl-smi">training</span>, <span class="pl-v">select</span> <span class="pl-k">=</span> setdiff(names(<span class="pl-smi">training</span>) ,<span class="pl-smi">allIrr</span>))
+str(<span class="pl-smi">training.short</span>)
+
+<span class="pl-c"># check na: </span>
+sum(is.na(<span class="pl-smi">training.short</span>))
+
+<span class="pl-c"># check near zero var:</span>
+<span class="pl-smi">nzv</span> <span class="pl-k">&lt;-</span> nearZeroVar(<span class="pl-smi">training.short</span>, <span class="pl-v">saveMetrics</span><span class="pl-k">=</span><span class="pl-c1">TRUE</span>)
+head(<span class="pl-smi">nzv</span>)
+
+
+<span class="pl-c">#</span>
+<span class="pl-c"># plot examples, to show that the vars are not gauss.</span>
+<span class="pl-c"># </span>
+<span class="pl-c"># hist( training.short$accel_dumbbell_y  )</span>
+<span class="pl-c"># hist((training.short$total_accel_belt  ))</span>
+
+
+
+<span class="pl-c">#</span>
+<span class="pl-c"># preprocessing</span>
+<span class="pl-c">#</span>
+<span class="pl-smi">preObj</span> <span class="pl-k">&lt;-</span> preProcess( <span class="pl-smi">training.short</span>[,<span class="pl-k">-</span><span class="pl-c1">53</span>], <span class="pl-v">method</span><span class="pl-k">=</span>c(<span class="pl-s"><span class="pl-pds">"</span>BoxCox<span class="pl-pds">"</span></span>))
+<span class="pl-c"># plot a couple of example:</span>
+<span class="pl-smi">preObj.short</span><span class="pl-k">&lt;-</span>predict(<span class="pl-smi">preObj</span>, <span class="pl-smi">training.short</span>[,<span class="pl-k">-</span><span class="pl-c1">53</span>]) 
+<span class="pl-c">#hist( preObj.short$accel_dumbbell_y  )          </span>
+<span class="pl-c">#hist( preObj.short$total_accel_belt  )</span>
+
+</pre></div>
+
+<div class="highlight highlight-source-r"><pre>
+
+
+<span class="pl-v">training.short1</span><span class="pl-k">=</span>cbind(<span class="pl-smi">training.short</span> [, <span class="pl-c1">53</span>],<span class="pl-smi">training.short</span> [, <span class="pl-k">-</span><span class="pl-c1">53</span>])
+<span class="pl-smi">nn</span><span class="pl-k">&lt;-</span>names(<span class="pl-smi">training.short1</span>)
+<span class="pl-smi">nn</span>[<span class="pl-c1">1</span>]<span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>classe<span class="pl-pds">"</span></span>
+names(<span class="pl-smi">training.short1</span>)<span class="pl-k">&lt;-</span><span class="pl-smi">nn</span>
+
+
+<span class="pl-c"># prediction using training.short1</span>
+<span class="pl-smi">modFit</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span> <span class="pl-k">~</span> ., <span class="pl-v">method</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>lda<span class="pl-pds">"</span></span>, <span class="pl-v">data</span><span class="pl-k">=</span><span class="pl-smi">training.short1</span>)
+predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">test</span>)
+<span class="pl-c"># 11 predictors [1] E A A A A C C D A E A A B A C B A D D B</span>
+<span class="pl-c"># 52 predictos      B A B C C E D D A A D A B A E A A B B B</span>
+
+<span class="pl-c"># evaluate model against the training</span>
+<span class="pl-smi">tr</span><span class="pl-k">&lt;-</span>predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">training.short1</span>)
+sum(<span class="pl-smi">tr</span> <span class="pl-k">!=</span> <span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+<span class="pl-c">#[1] 5792</span>
+
+
+<span class="pl-smi">modFit</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span> <span class="pl-k">~</span> ., <span class="pl-v">method</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>rpart<span class="pl-pds">"</span></span>,<span class="pl-v">data</span><span class="pl-k">=</span><span class="pl-smi">training.short1</span>)
+predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">test</span>)
+<span class="pl-c"># 11 predictors  [1] C A C A A C C A A A C C C A C A A A A C</span>
+<span class="pl-c"># 52 predictors      C A C A A C C A A A C C C A C A A A A C</span>
+
+<span class="pl-smi">tr</span><span class="pl-k">&lt;-</span>predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">training.short1</span>)
+sum(<span class="pl-smi">tr</span> <span class="pl-k">!=</span> <span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+<span class="pl-c">#[1] 9898</span>
+
+<span class="pl-smi">modFit</span><span class="pl-k">$</span><span class="pl-smi">finalModel</span>
+<span class="pl-c">#n= 19622 </span>
+<span class="pl-c">#</span>
+<span class="pl-c">#node), split, n, loss, yval, (yprob)</span>
+<span class="pl-c">#      * denotes terminal node</span>
+<span class="pl-c">#</span>
+<span class="pl-c"># 1) root 19622 14042 A (0.28 0.19 0.17 0.16 0.18)  </span>
+<span class="pl-c">#   2) roll_belt&lt; 130.5 17977 12411 A (0.31 0.21 0.19 0.18 0.11)  </span>
+<span class="pl-c">#     4) pitch_forearm&lt; -33.95 1578    10 A (0.99 0.0063 0 0 0) *</span>
+<span class="pl-c">#     5) pitch_forearm&gt;=-33.95 16399 12401 A (0.24 0.23 0.21 0.2 0.12)  </span>
+<span class="pl-c">#      10) magnet_dumbbell_y&lt; 439.5 13870  9953 A (0.28 0.18 0.24 0.19 0.11)  </span>
+<span class="pl-c">#        20) roll_forearm&lt; 123.5 8643  5131 A (0.41 0.18 0.18 0.17 0.061) *</span>
+<span class="pl-c">#        21) roll_forearm&gt;=123.5 5227  3500 C (0.077 0.18 0.33 0.23 0.18) *</span>
+<span class="pl-c">#      11) magnet_dumbbell_y&gt;=439.5 2529  1243 B (0.032 0.51 0.043 0.22 0.19) *</span>
+<span class="pl-c">#   3) roll_belt&gt;=130.5 1645    14 E (0.0085 0 0 0 0.99) *</span>
+<span class="pl-c">#</span>
+
+
+<span class="pl-c"># predict using Random Forest:</span>
+<span class="pl-smi">modFit</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span> <span class="pl-k">~</span> ., <span class="pl-v">method</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>rf<span class="pl-pds">"</span></span>,<span class="pl-v">ntree</span><span class="pl-k">=</span><span class="pl-c1">10</span>, <span class="pl-v">data</span><span class="pl-k">=</span><span class="pl-smi">training.short1</span>)
+predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">test</span>)
+<span class="pl-c"># ntree =  10  B A B A A E D B A A B C B A E E A B B B</span>
+<span class="pl-c"># ntree =  50  B A B A A E D B A A B C B A E E A B B B</span>
+
+
+<span class="pl-c"># evaluate model against the training</span>
+<span class="pl-smi">tr</span><span class="pl-k">&lt;-</span>predict(<span class="pl-smi">modFit</span>, <span class="pl-smi">training.short1</span>)
+sum(<span class="pl-smi">tr</span> <span class="pl-k">!=</span> <span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+<span class="pl-c"># [1] 5</span>
+<span class="pl-smi">t</span><span class="pl-k">&lt;-</span>(<span class="pl-smi">tr</span> <span class="pl-k">!=</span> <span class="pl-smi">training.short1</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+<span class="pl-c">#training.short1[t,]</span>
+<span class="pl-c">#      classe roll_belt pitch_belt yaw_belt total_accel_belt gyros_belt_x gyros_belt_y</span>
+<span class="pl-c">#3975       A      0.50       4.75    -88.2                4         0.03         0.02</span>
+<span class="pl-c">#7079       B      1.03       5.23    -87.8                4        -0.10         0.00</span>
+<span class="pl-c">#8619       B    122.00     -44.50    173.0               17         0.03         0.13</span>
+<span class="pl-c">#8620       B    122.00     -44.50    173.0               17         0.03         0.11</span>
+<span class="pl-c">#15286      D    126.00     -41.40    164.0               18         0.11         0.11</span></pre></div>
+
+      <footer class="site-footer">
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
